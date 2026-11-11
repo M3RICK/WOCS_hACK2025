@@ -29,7 +29,7 @@ third-party data was involved; the target infrastructure belonged to the event.]
 
 #table(
   columns: (4cm, 1fr),
-  [Severity],   [Critical (platform CVSS 9.8)],
+  [Severity],   [Critical (CVSS 9.8: `AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H`)],
   [Endpoint],   [`/association/list.php`],
   [Parameter],  [`search` (GET)],
   [Tooling],    [`sqlmap`],
@@ -71,6 +71,13 @@ execution during the event.
 Potential remote code execution, depending on how the server handles files
 under the upload path.
 
+== My assessment
+The platform scored this Critical (9.6). Since I demonstrated the unrestricted
+upload but did not prove code execution, I would rate it lower, in the High
+range. The `S:C` and full `C/I/A:H` metrics that drive the 9.6 assume an
+execution step I did not establish during the event. The upload flaw itself is
+real and fixable; the Critical rating depends on that unproven step.
+
 == Remediation
 Validate the real content type (magic bytes, not the extension), store uploads
 outside the web root, serve them through a handler that never executes them,
@@ -80,7 +87,7 @@ and randomize stored filenames.
 
 #table(
   columns: (4cm, 1fr),
-  [Severity],  [High (platform CVSS 7.5)],
+  [Severity],  [High (CVSS 7.5: `AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N`)],
   [Root cause],[PHP file inclusion (CWE-98)],
   [Endpoint],  [`/index.php`],
   [Parameter], [`page` (GET)],
