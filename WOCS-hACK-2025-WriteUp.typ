@@ -20,16 +20,16 @@ third-party data was involved; the target infrastructure belonged to the event.]
 #table(
   columns: (auto, 1fr, auto, auto, auto),
   [*No.*], [*Vulnerability*], [*Type*], [*CVSS 3.1*], [*Status*],
-  [1], [SQL Injection via GET parameter],            [CWE-89],  [9.8 Critical], [Accepted],
-  [2], [Unrestricted file upload leading to RCE],    [CWE-434], [9.6 Critical], [Accepted],
-  [3], [Source code disclosure via `php://filter`],  [CWE-260], [7.5 High],     [Accepted],
+  [1], [SQL Injection via GET parameter],             [CWE-89],  [9.8 Critical], [Accepted],
+  [2], [Unrestricted file upload (potential RCE)],     [CWE-434], [9.6 Critical], [Accepted],
+  [3], [Source code disclosure via `php://filter`],   [CWE-98],  [7.5 High],     [Accepted],
 )
 
 = SQL Injection via GET parameter
 
 #table(
   columns: (4cm, 1fr),
-  [Severity],   [Critical (CVSS 9.8, `AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H`)],
+  [Severity],   [Critical (platform CVSS 9.8)],
   [Endpoint],   [`/association/list.php`],
   [Parameter],  [`search` (GET)],
   [Tooling],    [`sqlmap`],
@@ -50,11 +50,11 @@ application uses.
 Use prepared statements / parameterized queries. User input must never be
 concatenated into SQL.
 
-= Unrestricted File Upload leading to RCE
+= Unrestricted File Upload (Potential RCE)
 
 #table(
   columns: (4cm, 1fr),
-  [Severity],  [Critical (CVSS 9.6, `AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:H`)],
+  [Severity],  [Critical (platform CVSS 9.6)],
   [Feature],   [Profile picture upload],
   [Location],  [web-reachable `/uploads/`],
   [Payload],   [PHP code carried inside an image (`.png`)],
@@ -62,12 +62,14 @@ concatenated into SQL.
 
 == Description
 The profile-picture upload accepted a file whose content was PHP code disguised
-as an image. The server validated neither the real file type nor the stored
-location, and placed the file under a web-reachable path. The uploaded file
-could then be requested directly and executed as PHP.
+as an image, with no validation of the real file type, and stored it under a
+web-reachable path. I demonstrated the unrestricted upload itself; code
+execution is the assessed potential impact rather than something I chained to
+execution during the event.
 
 == Impact
-Potential remote code execution on the host.
+Potential remote code execution, depending on how the server handles files
+under the upload path.
 
 == Remediation
 Validate the real content type (magic bytes, not the extension), store uploads
@@ -78,14 +80,15 @@ and randomize stored filenames.
 
 #table(
   columns: (4cm, 1fr),
-  [Severity],  [High (CVSS 7.5, `AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N`)],
+  [Severity],  [High (platform CVSS 7.5)],
+  [Root cause],[PHP file inclusion (CWE-98)],
   [Endpoint],  [`/index.php`],
   [Parameter], [`page` (GET)],
 )
 
 == Description
-The `page` GET parameter was passed to an include without restriction, which
-allowed a `php://filter` wrapper:
+The `page` GET parameter was passed to a PHP include without restriction
+(a file-inclusion flaw, CWE-98), which allowed a `php://filter` wrapper:
 
 ```
 index.php?page=php://filter/convert.base64-encode/resource=config.php
